@@ -12,6 +12,6 @@
     npm install
     rm -fr ../mp4fpsmod
     cp -r config_sample.json config.json
-## usage
-    edit config.json
+    nano config.json
     node app.js
+

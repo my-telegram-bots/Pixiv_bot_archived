@@ -1,0 +1,15 @@
+{
+    "pixiv":{
+        "username":"telegram_bot",
+        "password":""
+    },
+    "mysql":{
+        "host":"127.0.0.1",
+        "password":"",
+        "user":"root",
+        "database":"bot"
+    },
+    "bot":{
+        "token":"___YOUR_TOKEN_HERE___"
+    }
+}
