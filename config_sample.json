@@ -10,6 +10,8 @@
         "database":"bot"
     },
     "bot":{
-        "token":"___YOUR_TOKEN_HERE___"
-    }
+        "token":"___YOUR_TOKEN_HERE___",
+        "masterid":142223838
+    },
+    "proxyurl":"http://example.com"
 }
