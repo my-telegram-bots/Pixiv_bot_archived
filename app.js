@@ -1,5 +1,8 @@
+/**
+ * 离能用还需要大改。
+ * 以及自己艹一份api
+ */
 let request=require('request');
-let r2=require('r2');
 let promise=require('promise'); 
 let async=require('async');
 let fs=require('fs');
@@ -27,8 +30,10 @@ api.getMe().then(function(val) {
     config.bot.name=val.body.result.first_name;
     console.log(val.body.result);
     pixiv.login(config.pixiv.username, config.pixiv.password).then(function(a){
-        console.log(a);
-        poll();     
+        setInterval(function(){
+            pixiv.refreshAccessToken();
+        },60*1000*60);
+        poll();
     });
 });
 function poll(offset) {
@@ -44,6 +49,7 @@ function poll(offset) {
         });    
     } catch (e) {
         requestapi('SendMessage',{arr:[['chat_id',config.bot.masterid],['text',"发生错误啦~\n"+ encodeURI(e)]]});
+        poll();
     }
 }
 function run(msg){
