@@ -30,6 +30,7 @@ api.getMe().then(function(val) {
     config.bot.name=val.body.result.first_name;
     console.log(val.body.result);
     pixiv.login(config.pixiv.username, config.pixiv.password).then(function(a){
+        console.log(a);
         setInterval(function(){
             pixiv.refreshAccessToken();
         },60*1000*60);
@@ -97,8 +98,8 @@ function workillusts(illusts,sharebtn,addtags) {
             inline.push({
                 id:illust.id.toString(),
                 type: 'photo',
-                photo_url: img[1].replace('https://i.pximg.net/',config.proxyurl),
-                thumb_url: img[1].replace('https://i.pximg.net/',config.proxyurl),
+                photo_url: img[1].replace('https://i.pximg.net',config.proxyurl),
+                thumb_url: img[1].replace('https://i.pximg.net',config.proxyurl),
                 caption: illust.title,
                 photo_width:illust.width,
                 photo_height:illust.height,
@@ -194,8 +195,8 @@ function doinline(inline_query) {
                                 inline.push({
                                     id:id.toString()+i,
                                     type: 'photo',
-                                    photo_url: arrimg[1][i].replace('https://i.pximg.net/',config.proxyurl),
-                                    thumb_url: arrimg[1][i].replace('https://i.pximg.net/',config.proxyurl),
+                                    photo_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
+                                    thumb_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
                                     caption: arr.title,
                                     photo_width: arr.width,
                                     photo_height: arr.height,
@@ -242,8 +243,8 @@ function doinline(inline_query) {
                                 inline.push({
                                     id:id.toString()+i,
                                     type: 'photo',
-                                    photo_url: arrimg[1][i].replace('https://i.pximg.net/',config.proxyurl),
-                                    thumb_url: arrimg[1][i].replace('https://i.pximg.net/',config.proxyurl),
+                                    photo_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
+                                    thumb_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
                                     caption:pixdata.illust.title,
                                     photo_width: pixdata.width,
                                     photo_height: pixdata.height,
