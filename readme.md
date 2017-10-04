@@ -38,4 +38,4 @@
 
 GPLv3
 
-## Make with ♥
+## Made with ♥
