@@ -29,13 +29,19 @@ api.getMe().then(function(val) {
     config.bot.id=val.body.result.id;
     config.bot.name=val.body.result.first_name;
     console.log(val.body.result);
-    pixiv.login(config.pixiv.username, config.pixiv.password).then(function(a){
-        console.log(a);
-        setInterval(function(){
-            pixiv.refreshAccessToken();
-        },60*1000*60);
-        poll();
-    });
+    if(config.pixiv.refresh_token==''){
+        pixiv.login(config.pixiv.username, config.pixiv.password).then(function(a){
+            console.log(a);
+            config.pixiv.refresh_token=a.refresh_token;
+            fs.writeFileSync('config.json',JSON.stringify(config));
+        });
+    }else{
+        pixiv.refreshAccessToken(config.pixiv.refresh_token);
+    }
+    setInterval(function(){
+        pixiv.refreshAccessToken();
+    },60*1000*60);
+    poll();
 });
 function poll(offset) {
     try {
