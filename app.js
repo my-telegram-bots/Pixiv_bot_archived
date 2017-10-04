@@ -77,7 +77,7 @@ function run(msg){
 }
 //
 function genkeyboard(id,sharebtn) {
-    let inline_keyboard={inline_keyboard:[[{text:'open',url:'http://pixiv.net/i/'+id}]]};
+    let inline_keyboard={inline_keyboard:[[{text:'open',url:'https://www.pixiv.net/member_illust.php?mode=medium&illust_id='+id}]]};
     if(sharebtn===undefined || sharebtn)
             inline_keyboard.inline_keyboard[0].push({text:'share',switch_inline_query:id.toString()});
     return inline_keyboard;
