@@ -1,8 +1,8 @@
 # pixiv bot
 ## Demo
-    https://t.me/pixiv_bot
+### [Pixiv_bot](https://t.me/pixiv_bot)  
 ## Install
-    pacman -S ffmpeg git make automake autoconf gcc nodejs npm supervisor
+    pacman -S ffmpeg git make automake autoconf gcc nodejs npm supervisor nginx
     git clone https://github.com/nu774/mp4fpsmod.git
     git clone https://github.com/xiao201261/pixiv_bot.git
     #AUR
@@ -18,6 +18,17 @@
     #edit config
     nano config.json
     #import bot.sql to mysql
+###Edit nginx config(proxy)
+
+    server{
+            server_name _your_domain_here;
+            listen 80;
+            location / {
+                proxy_pass https://i.pximg.net;
+                proxy_set_header referer https://www.pixiv.net;
+            }
+        }
+### Run
     screen -S pixiv_bot supervisor -i file node app.js
 ## Thanks
     ffmpeg
@@ -26,3 +37,5 @@
 ## License
 
 GPLv3
+
+## Make with ♥
