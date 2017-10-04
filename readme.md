@@ -2,19 +2,24 @@
 ## Demo
 ### [Pixiv_bot](https://t.me/pixiv_bot)  
 ## description
- 1.quick send day rank
+  1.quick send day rank
+  ![quick_send_day_rank.png](https://i.loli.net/2017/10/04/59d49c6406607.png)
 
- ![quick_send_day_rank.png](https://i.loli.net/2017/10/04/59d49c6406607.png)
- 2.quick search
+  2.quick search
 
- ![quick_search.png](https://i.loli.net/2017/10/04/59d49c6431731.png)
- 3.ugoira img support(ugoira to mp4)
+  ![quick_search.png](https://i.loli.net/2017/10/04/59d49c6431731.png)
+ 
+  3.ugoira img support(ugoira to mp4)
 
- ![ugoira_support.png](https://i.loli.net/2017/10/04/59d49c60104d3.png)
- 4.multi illust_p support
-![multi_illust_p_support.png](https://i.loli.net/2017/10/04/59d49c6090dbb.png)
+  ![ugoira_support.png](https://i.loli.net/2017/10/04/59d49c60104d3.png)
+
+  4.multi illust_p support
+
+  ![multi_illust_p_support.png](https://i.loli.net/2017/10/04/59d49c6090dbb.png)
+
   5.send by illust id
-![quick_send_by_illust_id.png](https://i.loli.net/2017/10/04/59d49c60a5706.png)
+  
+  ![quick_send_by_illust_id.png](https://i.loli.net/2017/10/04/59d49c60a5706.png)
 
 ## Install
     pacman -S ffmpeg git make automake autoconf gcc nodejs npm supervisor nginx
