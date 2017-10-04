@@ -137,12 +137,16 @@ function doinline(inline_query) {
     if(query.indexOf('+tags')>-1)
         addtags=true;
     query=query.replace('-share','').replace('+tags','');
-    if(offset!==''){
+    let p=offset;
+    if(isNaN(offset) || offset==='')
+        p=0;
+    console.log(p);
+    if(offset!=='' && !isNaN(query)){
         console.log(offset);
         //如果数据有这个offset就直接调用数据库的 缓存为一天
         connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `offset`= ? AND `time`> ? ',[offset,unixtime-86400], function (error, results, fields) {
             if(results.length>0)
-                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',utils.md5(results[0].next_url)],['cache_time',200],["results",JSON.stringify(workillusts(JSON.parse(results[0].results),sharebtn,addtags))]]});
+                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',utils.md5(results[0].next_url)],['cache_time',config.bot.cache_time],["results",JSON.stringify(workillusts(JSON.parse(results[0].results),sharebtn,addtags))]]});
             else
                 //没有的话从数据库查询 next_offset 里面的 next_url
                 connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `next_offset` = ?',[offset], function (error, results, fields) {
@@ -160,14 +164,14 @@ function doinline(inline_query) {
                                 connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?, ?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
                                     if(error)
                                         console.error(error);
-                                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',200],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
+                                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
                                 })
                             }else
-                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',200],["results",JSON.stringify(workillusts(results[0].results,sharebtn,addtags))]]});
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],["results",JSON.stringify(workillusts(results[0].results,sharebtn,addtags))]]});
                         })
                     }else{
                         //没结果？ 不存在的吧
-                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',200],["results",'[]']]});
+                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],["results",'[]']]});
                     }
                 })
         })
@@ -185,7 +189,9 @@ function doinline(inline_query) {
                     }, this);
                 }
                 let isugoira=arr.ugoira;
-                for (var i = 0; i < arrimg[0].length; i++) {
+                for (var i = p*50; i < (parseInt(p)+1)*49+1; i++) {
+                    if(arrimg[1][i]===undefined)
+                        break;
                     if(isugoira==1)
                         if(arr.file_id!=='')
                             inline.push({
@@ -195,21 +201,23 @@ function doinline(inline_query) {
                                 caption: arr.title,
                                 reply_markup:genkeyboard(id,sharebtn)
                             });
-                            else{
+                            else
                                 requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',0],['switch_pm_text','click me to generate GIF'],['switch_pm_parameter',id]]});
-                            }else
-                                inline.push({
-                                    id:id.toString()+i,
-                                    type: 'photo',
-                                    photo_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
-                                    thumb_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
-                                    caption: arr.title,
-                                    photo_width: arr.width,
-                                    photo_height: arr.height,
-                                    reply_markup:genkeyboard(id,sharebtn)
-                                });
+                        else
+                            inline.push({
+                                id:id.toString()+i,
+                                type: 'photo',
+                                photo_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
+                                thumb_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
+                                caption: arr.title,
+                                photo_width: arr.width,
+                                photo_height: arr.height,
+                                reply_markup:genkeyboard(id,sharebtn)
+                            });
                 }
-                //if(inline.length>1)
+                if(inline.length>=49)
+                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',p+1],["results",JSON.stringify(inline)]]});
+                else
                     requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],["results",JSON.stringify(inline)]]});
             }else{
                 try{
@@ -245,7 +253,9 @@ function doinline(inline_query) {
                                     pixdata.illust.title+='#'+tag['name']+' ';
                                 }, this);
                             }
-                            for (var i = 0; i < arrimg[0].length; i++) {
+                            for (var i = p*50; i < (parseInt(p)+1)*49+1; i++) {
+                                if(arrimg[1][i]===undefined)
+                                    break;
                                 inline.push({
                                     id:id.toString()+i,
                                     type: 'photo',
@@ -257,7 +267,10 @@ function doinline(inline_query) {
                                     reply_markup:genkeyboard(id,sharebtn)
                                 });
                             }
-                            requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',200],["results",JSON.stringify(inline)]]});
+                            if(inline.length>=49)
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',parseInt(p)+1],["results",JSON.stringify(inline)]]});
+                            else
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],["results",JSON.stringify(inline)]]});
                         }
                         });
                     } catch(e){
@@ -270,7 +283,7 @@ function doinline(inline_query) {
                     if(error)
                         console.error(error);
                     if(results.length>0)
-                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',200],['next_offset',results[0].next_offset],["results",JSON.stringify(workillusts(JSON.parse(results[0].results),sharebtn,addtags))]]});
+                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',results[0].next_offset],["results",JSON.stringify(workillusts(JSON.parse(results[0].results),sharebtn,addtags))]]});
                     else{
                         if(query==='')
                             pixiv.illustRanking().then(pixdata=>{
@@ -280,7 +293,7 @@ function doinline(inline_query) {
                                 connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?,?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
                                     if(error)
                                         console.error(error);
-                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',200],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
                                 });
                             });
                         else
@@ -291,7 +304,7 @@ function doinline(inline_query) {
                                 connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?,?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
                                     if(error)
                                         console.error(error);
-                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',200],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
                                 });
                             });
                         }           
@@ -402,6 +415,7 @@ function domessage(message) {
                                 try{
                                     request('https://www.pixiv.net/member_illust.php?mode=medium&illust_id='+id,function (err,res,body){
                                         let pxframes;
+                                        //一瞬注入
                                         eval('pxframes'+cheerio.load(body)('#wrapper script').html().replace(/ /g,'').split('pixiv.context.ugokuIllustData')[1].split('pixiv.context.ugokuIllustFullscreenData')[0]);
                                         let frame='# timecode format v2\n0\n';
                                         let tempframe=0;
