@@ -33,22 +33,23 @@
     make
     make install
     cd ../pixiv_bot
+    mkdir file file/mp4_1 file/mp4_2 file/timecode file/ugoira
     npm install
+    npm install -g supervisor
     rm -fr ../mp4fpsmod
     cp -r config_sample.json config.json
     #edit config
     nano config.json
     #import bot.sql to mysql
 ### Edit nginx config(proxy)
-
     server{
-            server_name _your_domain_here;
-            listen 80;
-            location / {
-                proxy_pass https://i.pximg.net;
-                proxy_set_header referer https://www.pixiv.net;
-            }
+        server_name _your_domain_here;
+        listen 80;
+        location / {
+            proxy_pass https://i.pximg.net;
+            proxy_set_header referer https://www.pixiv.net;
         }
+    }
 ### Run
     screen -S pixiv_bot supervisor -i file node app.js
 ## Thanks

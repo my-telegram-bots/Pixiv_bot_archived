@@ -1,7 +1,8 @@
 {
     "pixiv":{
         "username":"telegram_bot",
-        "password":""
+        "password":"",
+        "refresh_token":""
     },
     "mysql":{
         "host":"127.0.0.1",

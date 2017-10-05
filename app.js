@@ -29,7 +29,7 @@ api.getMe().then(function(val) {
     config.bot.id=val.body.result.id;
     config.bot.name=val.body.result.first_name;
     console.log(val.body.result);
-    if(config.pixiv.refresh_token==''){
+    if(config.pixiv.refresh_token===''){
         pixiv.login(config.pixiv.username, config.pixiv.password).then(function(a){
             console.log(a);
             config.pixiv.refresh_token=a.refresh_token;
@@ -122,10 +122,9 @@ function doinline(inline_query) {
     let offset=inline_query.offset;
     let user_id=inline_query.from.id;
     let unixtime=Math.floor(new Date().getTime()/1000);
-    let oquery=query.split('\n');
     let inline=[];
     let id=query.match(new RegExp(/[0-9]{8}/ig)); //正则可能有问题
-    console.log(query);
+    console.log(user_id,query);
     if(id!==null)
         id=id[0];
     else
@@ -140,7 +139,6 @@ function doinline(inline_query) {
     let p=offset;
     if(isNaN(offset) || offset==='')
         p=0;
-    console.log(p);
     if(offset!=='' && !isNaN(query)){
         console.log(offset);
         //如果数据有这个offset就直接调用数据库的 缓存为一天
@@ -318,10 +316,8 @@ function domessage(message) {
     let text="";
     if(message.text!==undefined)
          text=message.text;
-    //let commandlength=message.entities[0].length;
     let rmusernametext=text.replace("@"+config.bot.username,"")
     let otext=rmusernametext.split(" ");
-    //requestapi('leavechat',{arr:[['chat_id',chat_id],['text',JSON.stringify(message)]]});
     let id=text.match(new RegExp(/[0-9]{8}/ig));
     if(id!=null)
         id=id[0];
