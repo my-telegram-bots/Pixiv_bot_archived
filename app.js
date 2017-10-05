@@ -76,10 +76,22 @@ function run(msg){
     });
 }
 //
-function genkeyboard(id,sharebtn) {
-    let inline_keyboard={inline_keyboard:[[{text:'open',url:'https://www.pixiv.net/member_illust.php?mode=medium&illust_id='+id}]]};
+function genkeyboard(id,sharebtn,p) {
+    let inline_keyboard={inline_keyboard:[[]]};
+    if(p===undefined)
+        inline_keyboard.inline_keyboard[0].push({
+            text:'open',
+            url:'https://www.pixiv.net/member_illust.php?mode=medium&illust_id='+id
+        });
+    else
+        inline_keyboard.inline_keyboard[0].push({
+            text:'open',
+            url:'https://www.pixiv.net/member_illust.php?mode=manga&illust_id='+id
+        });
     if(sharebtn===undefined || sharebtn)
-            inline_keyboard.inline_keyboard[0].push({text:'share',switch_inline_query:id.toString()});
+        inline_keyboard.inline_keyboard[0].push({
+            text:'share',switch_inline_query:id.toString()//+'_'+p
+        });
     return inline_keyboard;
 }
 function workillusts(illusts,sharebtn,addtags) {
@@ -139,6 +151,11 @@ function doinline(inline_query) {
     let p=offset;
     if(isNaN(offset) || offset==='')
         p=0;
+    let p1=offset.split('_');
+    if(p1[1]!==undefined)
+        p1=p1[1];
+    else
+        p1=false;
     if(offset!=='' && !isNaN(query)){
         console.log(offset);
         //如果数据有这个offset就直接调用数据库的 缓存为一天
@@ -197,7 +214,7 @@ function doinline(inline_query) {
                                 type: 'mpeg4_gif',
                                 mpeg4_file_id:arr.file_id,
                                 caption: arr.title,
-                                reply_markup:genkeyboard(id,sharebtn)
+                                reply_markup:genkeyboard(id,sharebtn,i)
                             });
                             else
                                 requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',0],['switch_pm_text','click me to generate GIF'],['switch_pm_parameter',id]]});
@@ -210,7 +227,7 @@ function doinline(inline_query) {
                                 caption: arr.title,
                                 photo_width: arr.width,
                                 photo_height: arr.height,
-                                reply_markup:genkeyboard(id,sharebtn)
+                                reply_markup:genkeyboard(id,sharebtn,i)
                             });
                 }
                 if(inline.length>=49)
@@ -262,7 +279,7 @@ function doinline(inline_query) {
                                     caption:pixdata.illust.title,
                                     photo_width: pixdata.width,
                                     photo_height: pixdata.height,
-                                    reply_markup:genkeyboard(id,sharebtn)
+                                    reply_markup:genkeyboard(id,sharebtn,i)
                                 });
                             }
                             if(inline.length>=49)
@@ -276,7 +293,7 @@ function doinline(inline_query) {
                     }
                 }
             });
-            else{
+            else
                 connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `query` = ? AND `offset`= ? AND `time` > ?',[id,offset,unixtime-86400], function (error, results, fields) {
                     if(error)
                         console.error(error);
@@ -307,7 +324,6 @@ function doinline(inline_query) {
                             });
                         }           
                     })  
-                }        
 }
 function domessage(message) {
     let chat_id=message.chat.id;
@@ -324,6 +340,7 @@ function domessage(message) {
     else
         id=text;
     if(!isNaN(id) && (id!='')){
+        //我才不想用async
         connection.query('SELECT * FROM `Pixiv_bot_p_list` WHERE `illust_id` = ?',[id], function (error, results, fields) {
             if(error)
                 console.error(error);
@@ -358,7 +375,7 @@ function domessage(message) {
                                                     console.error(error);
                                                 else
                                                     api.sendVideo(chat_id,fs.createReadStream('./file/mp4_2/'+id+'.mp4'),{
-                                                        reply_markup:JSON.stringify(genkeyboard(id)),
+                                                        reply_markup:JSON.stringify(genkeyboard(id,true,i)),
                                                         caption: arr.title
                                                     }).then(res => {                                    
                                                         connection.query('UPDATE `Pixiv_bot_p_list` SET `file_id` = ? WHERE `illust_id` = ?',[res.body.result.document.file_id,id]);
@@ -374,11 +391,11 @@ function domessage(message) {
                         }else
                             api.sendVideo(chat_id,fs.createReadStream('./file/mp4_2/'+id+'.mp4'),{
                                 caption: arr.title,
-                                reply_markup:JSON.stringify(genkeyboard(id))
+                                reply_markup:JSON.stringify(genkeyboard(id,true,i))
                             })
                     }else 
                         api.sendPhoto(chat_id,arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),{
-                            reply_markup:JSON.stringify(genkeyboard(id)),
+                            reply_markup:JSON.stringify(genkeyboard(id,true,i)),
                             caption: arr.title
                         })
                     }
@@ -430,7 +447,7 @@ function domessage(message) {
                                                             console.error(error);
                                                         else
                                                             api.sendVideo(chat_id,fs.createReadStream('./file/mp4_2/'+id+'.mp4'),{
-                                                                reply_markup:JSON.stringify(genkeyboard(id)),
+                                                                reply_markup:JSON.stringify(genkeyboard(id,true,i)),
                                                                 caption: arr.title
                                                             }).then(res => {                                    
                                                                 connection.query('UPDATE `Pixiv_bot_p_list` SET `file_id` = ? WHERE `illust_id` = ?',[res.body.result.document.file_id,id]);
@@ -445,7 +462,7 @@ function domessage(message) {
                                     }
                             }else{
                                 api.sendPhoto(chat_id,arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),{
-                                    reply_markup:JSON.stringify(genkeyboard(id)),
+                                    reply_markup:JSON.stringify(genkeyboard(id,true,i)),
                                     caption: pixdata.illust.title
                                 })
                             }
@@ -455,7 +472,7 @@ function domessage(message) {
             });
         }else{
             if(chat_id>0)
-            api.sendMessage(chat_id,'Please input pixiv illust id\nfor example: https://www.pixiv.net/member_illust.php?mode=medium&illust_id=64551847');
+                api.sendMessage(chat_id,'Please input pixiv illust id\nfor example: https://www.pixiv.net/member_illust.php?mode=medium&illust_id=64551847');
         }
 }
 function requestapi(type,value) {
