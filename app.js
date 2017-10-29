@@ -467,7 +467,7 @@ function domessage(message) {
         }else{
             switch (otext) {
                 case '/proxyurledit':
-                    if(user_id>config.bot.masterid){
+                    if(user_id==config.bot.masterid){
                         api.sendMessage(chat_id,'Proxy url updated');
                         config.proxyurl=otext[1];
                         fs.writeFileSync('config.json',JSON.stringify(config));
