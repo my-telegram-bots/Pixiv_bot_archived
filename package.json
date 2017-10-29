@@ -1,12 +1,12 @@
 {
     "name": "pixiv_bot",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "telegram bot",
     "main": "app.js",
     "scripts": {
       "test": "node app.js"
     },
-    "author": "",
+    "author": "xiao201261",
     "license": "GPL3",
     "dependencies": {
       "async": "^2.5.0",

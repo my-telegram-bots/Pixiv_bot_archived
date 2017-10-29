@@ -465,8 +465,18 @@ function domessage(message) {
                 }
             });
         }else{
-            if(chat_id>0)
-                api.sendMessage(chat_id,'Please input pixiv illust id\nfor example: https://www.pixiv.net/member_illust.php?mode=medium&illust_id=64551847');
+            switch (otext) {
+                case '/proxyurledit':
+                    if(user_id>config.bot.masterid){
+                        api.sendMessage(chat_id,'Proxy url updated');
+                        config.proxyurl=otext[1];
+                        fs.writeFileSync('config.json',JSON.stringify(config));
+                    }
+                    break;
+                default:
+                if(chat_id>0)
+                    api.sendMessage(chat_id,'Please input pixiv illust id\nfor example: https://www.pixiv.net/member_illust.php?mode=medium&illust_id=64551847');
+            }
         }
 }
 function requestapi(type,value) {
