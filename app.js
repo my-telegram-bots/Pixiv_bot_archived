@@ -465,7 +465,6 @@ function domessage(message) {
                 }
             });
         }else{
-            cons
             switch (otext[0]) {
                 case '/proxyurledit':
                     if(user_id==config.bot.masterid){
