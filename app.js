@@ -465,7 +465,8 @@ function domessage(message) {
                 }
             });
         }else{
-            switch (otext) {
+            cons
+            switch (otext[0]) {
                 case '/proxyurledit':
                     if(user_id==config.bot.masterid){
                         api.sendMessage(chat_id,'Proxy url updated');
@@ -474,8 +475,8 @@ function domessage(message) {
                     }
                     break;
                 default:
-                if(chat_id>0)
-                    api.sendMessage(chat_id,'Please input pixiv illust id\nfor example: https://www.pixiv.net/member_illust.php?mode=medium&illust_id=64551847');
+                    if(chat_id>0)
+                        api.sendMessage(chat_id,'Please input pixiv illust id\nfor example: https://www.pixiv.net/member_illust.php?mode=medium&illust_id=64551847');
             }
         }
 }
