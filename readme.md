@@ -24,7 +24,7 @@
 
 ## Install
     pacman -S ffmpeg git make automake autoconf gcc nodejs npm supervisor nginx
-    git clone https://github.com/nu774/mp4fpsmod.git
+    git clone https://github.com/xiao201261/mp4fpsmod.git
     git clone https://github.com/xiao201261/pixiv_bot.git
     #AUR
     cd mp4fpsmod
