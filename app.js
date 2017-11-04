@@ -48,7 +48,7 @@ function poll(offset) {
         }else if(JSON.parse(body).ok)
             run(JSON.parse(body).result);
         else   
-            console.error('bad config.bot.token or limit');
+            console.error('bad token');
         });    
     } catch (e) {
         poll();
@@ -70,7 +70,6 @@ function run(msg){
         }
     });
 }
-//
 function genkeyboard(id,sharebtn,p) {
     let inline_keyboard={inline_keyboard:[[]]};
     if(p===undefined)
@@ -120,7 +119,6 @@ function workillusts(illusts,sharebtn,addtags) {
             });
         }
     }, this);
-    //console.log(inline);
     return inline;
 }
 function doinline(inline_query) {
@@ -130,7 +128,7 @@ function doinline(inline_query) {
     let user_id=inline_query.from.id;
     let unixtime=Math.floor(new Date().getTime()/1000);
     let inline=[];
-    let id=query.match(new RegExp(/[0-9]{8}/ig)); //正则可能有问题
+    let id=query.match(new RegExp(/[0-9]{8}/)); //正则可能有问题
     console.log(new Date()+' '+inline_query.from.first_name+' '+inline_query.from.last_name+'->'+user_id+'->'+query);
     if(id!==null)
         id=id[0];
@@ -280,8 +278,7 @@ function doinline(inline_query) {
                             else
                                 requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],["results",JSON.stringify(inline)]]});
                         }
-                        });
-                
+                    });
                 });
                 else
                     connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `query` = ? AND `offset`= ? AND `time` > ?',[id,offset,unixtime-86400], function (error, results, fields) {
@@ -327,14 +324,14 @@ function domessage(message) {
          text=message.text;
     let rmusernametext=text.replace("@"+config.bot.username,"")
     let otext=rmusernametext.split(" ");
-    let id=text.match(new RegExp(/[0-9]{8}/ig));
+    let id=text.match(new RegExp(/[0-9]{8}/));
     console.log(new Date()+' '+message.from.first_name+' '+message.from.last_name+'->'+user_id+'->'+text);
     if(id!=null)
         id=id[0];
     else
         id=text;
     if(!isNaN(id) && (id!='')){
-        //我才不想用async
+        //我才不想用await
         connection.query('SELECT * FROM `Pixiv_bot_p_list` WHERE `illust_id` = ?',[id], function (error, results, fields) {
             if(error)
                 console.error(error);
@@ -481,13 +478,11 @@ function domessage(message) {
 }
 function requestapi(type,value) {
     let arr1="?";
-    let arr2={};
     if((value!==undefined) && (value.arr!==undefined))
         (value.arr).forEach(function(arr) {
             arr1+=encodeURIComponent(arr[0])+"="+encodeURIComponent(arr[1]);
             if(arr[0]!=value.arr[value.arr.length-1][0])
             arr1+="&";
-            //arr2[arr[0]] = arr[1];
         });
     return new promise(function(lll,err) {
         request('https://api.telegram.org/bot'+config.bot.token+'/'+type+arr1,function (error, response, body) {
