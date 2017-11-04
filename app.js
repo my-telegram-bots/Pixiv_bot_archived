@@ -130,10 +130,6 @@ function doinline(inline_query) {
     let inline=[];
     let id=query.match(new RegExp(/[0-9]{8}/)); //正则可能有问题
     console.log(new Date()+' '+inline_query.from.first_name+' '+inline_query.from.last_name+'->'+user_id+'->'+query);
-    /*if(id!==null)
-        id=id[0];
-    else
-        id=query;*/
     let sharebtn=true
     if(query.indexOf('-share')>-1)
         sharebtn=false;
