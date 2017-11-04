@@ -322,6 +322,10 @@ function domessage(message) {
     let otext=rmusernametext.split(" ");
     let id=text.match(new RegExp(/[0-9]{8}/));
     console.log(new Date()+' '+message.from.first_name+' '+message.from.last_name+'->'+user_id+'->'+text);
+    if(id!=null)
+        id=id[0];
+    else
+        id='';
     if(!isNaN(id) && (id!='')){
         //我才不想用await
         connection.query('SELECT * FROM `Pixiv_bot_p_list` WHERE `illust_id` = ?',[id], function (error, results, fields) {
