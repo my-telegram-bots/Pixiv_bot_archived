@@ -442,7 +442,7 @@ function domessage(message) {
                                                         else
                                                             api.sendVideo(chat_id,fs.createReadStream('./file/mp4_2/'+id+'.mp4'),{
                                                                 reply_markup:JSON.stringify(genkeyboard(id,true,i)),
-                                                                caption: arr.title
+                                                                caption: pixdata.illust.title
                                                             }).then(res => {                                    
                                                                 connection.query('UPDATE `Pixiv_bot_p_list` SET `file_id` = ? WHERE `illust_id` = ?',[res.body.result.document.file_id,id]);
                                                             });
