@@ -130,10 +130,10 @@ function doinline(inline_query) {
     let inline=[];
     let id=query.match(new RegExp(/[0-9]{8}/)); //正则可能有问题
     console.log(new Date()+' '+inline_query.from.first_name+' '+inline_query.from.last_name+'->'+user_id+'->'+query);
-    if(id!==null)
+    /*if(id!==null)
         id=id[0];
     else
-        id=query;
+        id=query;*/
     let sharebtn=true
     if(query.indexOf('-share')>-1)
         sharebtn=false;
@@ -149,171 +149,167 @@ function doinline(inline_query) {
         p1=p1[1];
     else
         p1=false;
-    try {
-        if(offset!=='' && !isNaN(query)){
-            console.log(offset);
-            //如果数据有这个offset就直接调用数据库的 缓存为一天
-            connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `offset`= ? AND `time`> ? ',[offset,unixtime-86400], function (error, results, fields) {
-                if(results.length>0)
-                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',utils.md5(results[0].next_url)],['cache_time',config.bot.cache_time],["results",JSON.stringify(workillusts(JSON.parse(results[0].results),sharebtn,addtags))]]});
+    if(offset!=='' && !isNaN(query)){
+        console.log(offset);
+        //如果数据有这个offset就直接调用数据库的 缓存为一天
+        connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `offset`= ? AND `time`> ? ',[offset,unixtime-86400], function (error, results, fields) {
+            if(results.length>0)
+                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',utils.md5(results[0].next_url)],['cache_time',config.bot.cache_time],["results",JSON.stringify(workillusts(JSON.parse(results[0].results),sharebtn,addtags))]]});
+            else
+                //没有的话从数据库查询 next_offset 里面的 next_url
+                connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `next_offset` = ?',[offset], function (error, results, fields) {
+                    if(error)
+                        console.error(error);
+                    if((results.length>0) && (results[0].next_url!='-')){
+                        pixiv.requestUrl(results[0].next_url).then(pixdata => {
+                            //然后缓存
+                            //然后生成next_offset
+                            //如果没了就不提供 next_offset
+                            if(pixdata.next_url==null)
+                                pixdata.next_url='-';
+                            if(pixdata.illusts.length>0){
+                                let next_offset=utils.md5(pixdata.next_url);
+                                connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?, ?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
+                                    if(error)
+                                        console.error(error);
+                                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
+                                })
+                            }else
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],["results",JSON.stringify(workillusts(results[0].results,sharebtn,addtags))]]});
+                        })
+                    }else{
+                        //没结果？ 不存在的吧
+                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],["results",'[]']]});
+                    }
+                })
+        })
+    }else if(!isNaN(id) && query!=='')
+        connection.query('SELECT * FROM `Pixiv_bot_p_list` WHERE `illust_id` = ?',[id], function (error, results, fields) {
+            if(results.length>0){
+                let arr=results[0];
+                let arrimg=[];
+                arrimg[0]=JSON.parse(arr.thumb_url);
+                arrimg[1]=JSON.parse(arr.original_url);
+                if(addtags){
+                    arr.title+='\n';
+                    (JSON.parse(arr.tags)).forEach(function(tag) {
+                        arr.title+='#'+tag['name']+' ';
+                    }, this);
+                }
+                let isugoira=arr.ugoira;
+                //dalao有更好的思路吗？ 目前想不到了
+                for (var i = p*50; i < (parseInt(p)+1)*49+1; i++) {
+                    if(arrimg[1][i]===undefined)
+                        break;
+                    if(isugoira==1)
+                        if(arr.file_id!=='')
+                            inline.push({
+                                id:id.toString()+i,
+                                type: 'mpeg4_gif',
+                                mpeg4_file_id:arr.file_id,
+                                caption: arr.title,
+                                reply_markup:genkeyboard(id,sharebtn,i)
+                            });
+                            else
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',0],['switch_pm_text','click me to generate GIF'],['switch_pm_parameter',id]]});
+                        else
+                            inline.push({
+                                id:id.toString()+i,
+                                type: 'photo',
+                                photo_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
+                                thumb_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
+                                caption: arr.title,
+                                photo_width: arr.width,
+                                photo_height: arr.height,
+                                reply_markup:genkeyboard(id,sharebtn,i)
+                            });
+                }
+                if(inline.length>=49)
+                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',p+1],["results",JSON.stringify(inline)]]});
                 else
-                    //没有的话从数据库查询 next_offset 里面的 next_url
-                    connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `next_offset` = ?',[offset], function (error, results, fields) {
-                        if(error)
-                            console.error(error);
-                        if((results.length>0) && (results[0].next_url!='-')){
-                            pixiv.requestUrl(results[0].next_url).then(pixdata => {
-                                //然后缓存
-                                //然后生成next_offset
-                                //如果没了就不提供 next_offset
+                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],["results",JSON.stringify(inline)]]});
+            }else
+                pixiv.illustDetail(id).then(pixdata => {
+                    pixiv.bookmarkIllust(id);
+                    let arrimg=[[],[],[]];
+                    if(pixdata.illust.meta_single_page.original_image_url!==undefined){
+                        arrimg[0][0]=pixdata.illust.image_urls.square_medium;
+                        arrimg[1][0]=pixdata.illust.meta_single_page.original_image_url;
+                        arrimg[2][0]=0;
+                        if(pixdata.illust.meta_single_page.original_image_url.indexOf('ugoira')>-1)
+                            arrimg[2][0]=1;
+                    }else
+                        (pixdata.illust.meta_pages).forEach(function(img) {
+                            arrimg[0].push(img.image_urls.square_medium);
+                            arrimg[1].push(img.image_urls.original);
+                            if((pixdata.illust.meta_single_page.original_image_url!==undefined) && (pixdata.illust.meta_single_page.original_image_url.indexOf('ugoira')>-1))
+                                arrimg[2].push(1);
+                            else 
+                                arrimg[2].push(0);
+                        }, this);
+                    
+                    connection.query('INSERT INTO `Pixiv_bot_p_list` (`user_id`, `illust_id`, `ugoira`, `original_url`,`file_id`, `width`, `height`, `thumb_url`, `author_id`, `author_name`, `author_account`, `tags`, `caption`,`title`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [user_id, id, arrimg[2][0], JSON.stringify(arrimg[1]), '', pixdata.illust.width, pixdata.illust.height, JSON.stringify(arrimg[0]), pixdata.illust.user.id,pixdata.illust.user.name , pixdata.illust.user.account, JSON.stringify(pixdata.illust.tags), pixdata.illust.caption,pixdata.illust.title]);
+                    if(arrimg[2][0]==1){
+                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',0],['switch_pm_text','click me to generate GIF'],['switch_pm_parameter',id]]});
+                    }else{
+                        if(addtags){
+                            pixdata.illust.title+='\n';
+                            (JSON.parse(pixdata.illust.tags)).forEach(function(tag) {
+                                pixdata.illust.title+='#'+tag['name']+' ';
+                            }, this);
+                        }
+                        for (var i = p*50; i < (parseInt(p)+1)*49+1; i++) {
+                            if(arrimg[1][i]===undefined)
+                                break;
+                            inline.push({
+                                id:id.toString()+i,
+                                type: 'photo',
+                                photo_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
+                                thumb_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
+                                caption:pixdata.illust.title,
+                                photo_width: pixdata.width,
+                                photo_height: pixdata.height,
+                                reply_markup:genkeyboard(id,sharebtn,i)
+                            });
+                        }
+                        if(inline.length>=49)
+                            requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',parseInt(p)+1],["results",JSON.stringify(inline)]]});
+                        else
+                            requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],["results",JSON.stringify(inline)]]});
+                    }
+                });
+            });
+            else
+                connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `query` = ? AND `offset`= ? AND `time` > ?',[id,offset,unixtime-86400], function (error, results, fields) {
+                    if(error)
+                        console.error(error);
+                    if(results.length>0)
+                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',results[0].next_offset],["results",JSON.stringify(workillusts(JSON.parse(results[0].results),sharebtn,addtags))]]});
+                    else{
+                        if(query==='')
+                            pixiv.illustRanking().then(pixdata=>{
+                                if(pixdata.next_url==null)
+                                    pixdata.next_url='-';   
+                                let next_offset=utils.md5(pixdata.next_url);   
+                                connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?,?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
+                                    if(error)
+                                        console.error(error);
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
+                                });
+                            });
+                        else
+                            pixiv.searchIllust(query).then(pixdata => {
                                 if(pixdata.next_url==null)
                                     pixdata.next_url='-';
-                                if(pixdata.illusts.length>0){
-                                    let next_offset=utils.md5(pixdata.next_url);
-                                    connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?, ?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
-                                        if(error)
-                                            console.error(error);
-                                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
-                                    })
-                                }else
-                                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],["results",JSON.stringify(workillusts(results[0].results,sharebtn,addtags))]]});
-                            })
-                        }else{
-                            //没结果？ 不存在的吧
-                            requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],["results",'[]']]});
-                        }
+                                let next_offset=utils.md5(pixdata.next_url);
+                                connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?,?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
+                                    if(error)
+                                        console.error(error);
+                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
+                                });
+                            });
+                        }           
                     })
-            })
-        }else if(!isNaN(id) && query!=='')
-            connection.query('SELECT * FROM `Pixiv_bot_p_list` WHERE `illust_id` = ?',[id], function (error, results, fields) {
-                if(results.length>0){
-                    let arr=results[0];
-                    let arrimg=[];
-                    arrimg[0]=JSON.parse(arr.thumb_url);
-                    arrimg[1]=JSON.parse(arr.original_url);
-                    if(addtags){
-                        arr.title+='\n';
-                        (JSON.parse(arr.tags)).forEach(function(tag) {
-                            arr.title+='#'+tag['name']+' ';
-                        }, this);
-                    }
-                    let isugoira=arr.ugoira;
-                    //dalao有更好的思路吗？ 目前想不到了
-                    for (var i = p*50; i < (parseInt(p)+1)*49+1; i++) {
-                        if(arrimg[1][i]===undefined)
-                            break;
-                        if(isugoira==1)
-                            if(arr.file_id!=='')
-                                inline.push({
-                                    id:id.toString()+i,
-                                    type: 'mpeg4_gif',
-                                    mpeg4_file_id:arr.file_id,
-                                    caption: arr.title,
-                                    reply_markup:genkeyboard(id,sharebtn,i)
-                                });
-                                else
-                                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',0],['switch_pm_text','click me to generate GIF'],['switch_pm_parameter',id]]});
-                            else
-                                inline.push({
-                                    id:id.toString()+i,
-                                    type: 'photo',
-                                    photo_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
-                                    thumb_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
-                                    caption: arr.title,
-                                    photo_width: arr.width,
-                                    photo_height: arr.height,
-                                    reply_markup:genkeyboard(id,sharebtn,i)
-                                });
-                    }
-                    if(inline.length>=49)
-                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',p+1],["results",JSON.stringify(inline)]]});
-                    else
-                        requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],["results",JSON.stringify(inline)]]});
-                }else
-                    pixiv.illustDetail(id).then(pixdata => {
-                        pixiv.bookmarkIllust(id);
-                        let arrimg=[[],[],[]];
-                        if(pixdata.illust.meta_single_page.original_image_url!==undefined){
-                            arrimg[0][0]=pixdata.illust.image_urls.square_medium;
-                            arrimg[1][0]=pixdata.illust.meta_single_page.original_image_url;
-                            arrimg[2][0]=0;
-                            if(pixdata.illust.meta_single_page.original_image_url.indexOf('ugoira')>-1)
-                                arrimg[2][0]=1;
-                        }else
-                            (pixdata.illust.meta_pages).forEach(function(img) {
-                                arrimg[0].push(img.image_urls.square_medium);
-                                arrimg[1].push(img.image_urls.original);
-                                if((pixdata.illust.meta_single_page.original_image_url!==undefined) && (pixdata.illust.meta_single_page.original_image_url.indexOf('ugoira')>-1))
-                                    arrimg[2].push(1);
-                                else 
-                                    arrimg[2].push(0);
-                            }, this);
-                        
-                        connection.query('INSERT INTO `Pixiv_bot_p_list` (`user_id`, `illust_id`, `ugoira`, `original_url`,`file_id`, `width`, `height`, `thumb_url`, `author_id`, `author_name`, `author_account`, `tags`, `caption`,`title`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [user_id, id, arrimg[2][0], JSON.stringify(arrimg[1]), '', pixdata.illust.width, pixdata.illust.height, JSON.stringify(arrimg[0]), pixdata.illust.user.id,pixdata.illust.user.name , pixdata.illust.user.account, JSON.stringify(pixdata.illust.tags), pixdata.illust.caption,pixdata.illust.title]);
-                        if(arrimg[2][0]==1){
-                            requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',0],['switch_pm_text','click me to generate GIF'],['switch_pm_parameter',id]]});
-                        }else{
-                            if(addtags){
-                                pixdata.illust.title+='\n';
-                                (JSON.parse(pixdata.illust.tags)).forEach(function(tag) {
-                                    pixdata.illust.title+='#'+tag['name']+' ';
-                                }, this);
-                            }
-                            for (var i = p*50; i < (parseInt(p)+1)*49+1; i++) {
-                                if(arrimg[1][i]===undefined)
-                                    break;
-                                inline.push({
-                                    id:id.toString()+i,
-                                    type: 'photo',
-                                    photo_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
-                                    thumb_url: arrimg[1][i].replace('https://i.pximg.net',config.proxyurl),
-                                    caption:pixdata.illust.title,
-                                    photo_width: pixdata.width,
-                                    photo_height: pixdata.height,
-                                    reply_markup:genkeyboard(id,sharebtn,i)
-                                });
-                            }
-                            if(inline.length>=49)
-                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['next_offset',parseInt(p)+1],["results",JSON.stringify(inline)]]});
-                            else
-                                requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],["results",JSON.stringify(inline)]]});
-                        }
-                    });
-                });
-                else
-                    connection.query('SELECT * FROM `Pixiv_bot_cache` WHERE `query` = ? AND `offset`= ? AND `time` > ?',[id,offset,unixtime-86400], function (error, results, fields) {
-                        if(error)
-                            console.error(error);
-                        if(results.length>0)
-                            requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',results[0].next_offset],["results",JSON.stringify(workillusts(JSON.parse(results[0].results),sharebtn,addtags))]]});
-                        else{
-                            if(query==='')
-                                pixiv.illustRanking().then(pixdata=>{
-                                    if(pixdata.next_url==null)
-                                        pixdata.next_url='-';   
-                                    let next_offset=utils.md5(pixdata.next_url);   
-                                    connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?,?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
-                                        if(error)
-                                            console.error(error);
-                                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
-                                    });
-                                });
-                            else
-                                pixiv.searchIllust(query).then(pixdata => {
-                                    if(pixdata.next_url==null)
-                                        pixdata.next_url='-';
-                                    let next_offset=utils.md5(pixdata.next_url);
-                                    connection.query('INSERT INTO `Pixiv_bot_cache` (`user_id`, `query`, `offset`, `next_offset`,`results`, `time`,`next_url`) VALUES (?, ?, ?, ?, ?,?,?)',[user_id,query,offset,next_offset,JSON.stringify(pixdata.illusts),unixtime,pixdata.next_url], function (error, results, fields) {
-                                        if(error)
-                                            console.error(error);
-                                    requestapi('answerInlineQuery',{arr:[["inline_query_id",query_id],['cache_time',config.bot.cache_time],['next_offset',next_offset],["results",JSON.stringify(workillusts(pixdata.illusts,sharebtn,addtags))]]});
-                                    });
-                                });
-                            }           
-                        })  
-    }catch(e){
-        requestapi('SendMessage',{arr:[['chat_id',config.bot.masterid],['text',"发生错误啦~\n"+ encodeURI(e)]]});
-    } 
 }
 function domessage(message) {
     let chat_id=message.chat.id;
