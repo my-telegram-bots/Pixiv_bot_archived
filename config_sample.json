@@ -13,7 +13,8 @@
     "bot":{
         "token":"___YOUR_TOKEN_HERE___",
         "masterid":142223838,
-        "cache_time":200
+        "cache_time":200,
+        "poll_time":500
     },
     "proxyurl":"http://example.com"
 }
