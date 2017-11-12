@@ -130,7 +130,10 @@ function doinline(inline_query) {
     let inline=[];
     let id=query.match(new RegExp(/[0-9]{8}/)); //正则可能有问题
     console.log(new Date()+' '+inline_query.from.first_name+' '+inline_query.from.last_name+'->'+user_id+'->'+query);
-    id = id[0] || '';
+    if(id!==null)
+        id=id[0];
+    else
+        id='';
     let sharebtn=true
     if(query.indexOf('-share')>-1)
         sharebtn=false;
@@ -319,7 +322,10 @@ function domessage(message) {
     let otext=rmusernametext.split(" ");
     let id=text.match(new RegExp(/[0-9]{8}/));
     console.log(new Date()+' '+message.from.first_name+' '+message.from.last_name+'->'+user_id+'->'+text);
-    id = id[0] || ''
+    if(id!==null)
+        id=id[0];
+    else
+        id='';
     if(!isNaN(id) && (id!='')){
         //我才不想用await
         connection.query('SELECT * FROM `Pixiv_bot_p_list` WHERE `illust_id` = ?',[id], function (error, results, fields) {
