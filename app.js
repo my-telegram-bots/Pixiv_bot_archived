@@ -341,18 +341,15 @@ function domessage(message) {
                     if(isugoira==1){
                         if(arr.file_id==''){
                           try{
-                            request('https://www.pixiv.net/member_illust.php?mode=medium&illust_id='+id,function (err,res,body){
-                                let pxframes;
-                                //一瞬注入
-                                eval('pxframes'+cheerio.load(body)('#wrapper script').html().replace(/ /g,'').split('pixiv.context.ugokuIllustData')[1].split('pixiv.context.ugokuIllustFullscreenData')[0]);
+                            pixiv.ugoiraMetaData(id).then(pixdata => {
                                 let frame='# timecode format v2\n0\n';
                                 let tempframe=0;
-                                (pxframes.frames).forEach(function(element) {
+                                (pixdata.ugoira_metadata.frames).forEach(function(element) {
                                     tempframe+=element.delay;
                                     frame+=tempframe+"\n";
                                 }, this);
                                 fs.writeFileSync('./file/timecode/'+id+'.txt',frame);
-                                request(pxframes.src.replace('https://i.pximg.net',config.proxyurl),function (err,res,body){
+                                request(pixdata.ugoira_metadata.zip_urls.medium.replace('https://i.pximg.net',config.proxyurl),function (err,res,body){
                                     exec('ffmpeg -i ./file/ugoira/'+id+'/%6d.jpg -c:v libx264 -vf "format=yuv420p,scale=trunc(iw/2)*2:trunc(ih/2)*2" ./file/mp4_1/'+id+'.mp4',{timeout:60*1000}, (error, stdout, stderr) => {
                                         if (error)
                                             console.error(error);
@@ -369,7 +366,7 @@ function domessage(message) {
                                                     });
                                             });
                                         });
-                                    }).pipe(unzip.Extract({ path: './file/ugoira/'+id })); 
+                                    }).pipe(unzip.Extract({path: './file/ugoira/'+id})); 
                                 });
                             }catch(error){
                                 requestapi('SendMessage',{arr:[['chat_id',config.bot.masterid],['text',"转换发生错误\n"+error]]});
@@ -413,18 +410,15 @@ function domessage(message) {
                         for (var i = 0; i < arrimg[0].length; i++) {
                             if(arrimg[2][i]==1){
                                 try{
-                                    request('https://www.pixiv.net/member_illust.php?mode=medium&illust_id='+id,function (err,res,body){
-                                        let pxframes;
-                                        //一瞬注入
-                                        eval('pxframes'+cheerio.load(body)('#wrapper script').html().replace(/ /g,'').split('pixiv.context.ugokuIllustData')[1].split('pixiv.context.ugokuIllustFullscreenData')[0]);
+                                    pixiv.ugoiraMetaData(id).then(pixdata => {
                                         let frame='# timecode format v2\n0\n';
                                         let tempframe=0;
-                                        (pxframes.frames).forEach(function(element) {
+                                        (pixdata.ugoira_metadata.frames).forEach(function(element) {
                                             tempframe+=element.delay;
                                             frame+=tempframe+"\n";
                                         }, this);
                                         fs.writeFileSync('./file/timecode/'+id+'.txt',frame);
-                                        request(pxframes.src.replace('https://i.pximg.net',config.proxyurl),function (err,res,body){
+                                        request(pixdata.ugoira_metadata.zip_urls.medium.replace('https://i.pximg.net',config.proxyurl),function (err,res,body){
                                             exec('ffmpeg -i ./file/ugoira/'+id+'/%6d.jpg -c:v libx264 -vf "format=yuv420p,scale=trunc(iw/2)*2:trunc(ih/2)*2" ./file/mp4_1/'+id+'.mp4',{timeout:60*1000}, (error, stdout, stderr) => {
                                                 if (error)
                                                     console.error(error);
@@ -435,13 +429,13 @@ function domessage(message) {
                                                         else
                                                             api.sendVideo(chat_id,fs.createReadStream('./file/mp4_2/'+id+'.mp4'),{
                                                                 reply_markup:JSON.stringify(genkeyboard(id,true,i)),
-                                                                caption: pixdata.illust.title
+                                                                caption: arr.title
                                                             }).then(res => {                                    
                                                                 connection.query('UPDATE `Pixiv_bot_p_list` SET `file_id` = ? WHERE `illust_id` = ?',[res.body.result.document.file_id,id]);
                                                             });
                                                     });
                                                 });
-                                            }).pipe(unzip.Extract({ path: './file/ugoira/'+id })); 
+                                            }).pipe(unzip.Extract({path: './file/ugoira/'+id})); 
                                         });
                                     }catch(error){
                                         requestapi('SendMessage',{arr:[['chat_id',config.bot.masterid],['text',"转换发生错误\n"+error]]});
