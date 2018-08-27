@@ -9,11 +9,11 @@ const utils = require('utility');
 const mysql = require('mysql');
 let config = require('./config.json');
 const connection = mysql.createConnection({
-    host:config.mysql.host,
-    user:config.mysql.user,
-    password:config.mysql.password,
-    database:config.mysql.database,
-    charset:'utf8mb4'
+    host: config.mysql.host,
+    user: config.mysql.user,
+    password: config.mysql.password,
+    database: config.mysql.database,
+    charset: 'utf8mb4'
 });
 connection.connect();
 requesttgapi('getMe').then(function(res) {
@@ -54,7 +54,7 @@ function poll(offset) {
 function run(msg){
     let offset = '';
     if(msg[msg.length-1] !== undefined)
-        offset=msg[msg.length-1].update_id+1;
+        offset = msg[msg.length-1].update_id+1;
     setTimeout(function () {
         poll(offset);
     },1000);
@@ -322,8 +322,9 @@ function domessage(message) {
             case '/start':
                 requesttgapi('SendMessage',{
                     chat_id: chat_id,
-                    text: 'Welcome to use unofficial Pixiv bot.\nI can easy to send pixiv illust and convert ugoira to mp4.\nYou can send pixiv url to fetch image and ugoira.',
-                    reply_to_message_id: message_id
+                    text: 'Welcome to the unofficial Pixiv bot.\nSimply send a link with "illust" (e.g. https://www.pixiv.net/member_illust.php?mode=medium&illust_id=70374431) from Pixiv and I\'ll show you the pic.\nYou can also send me a Pixiv url to fetch image and converted ugoira.',
+                    reply_to_message_id: message_id,
+                    disable_web_page_preview: true
                 }).then(res=>{
                     setTimeout(() => {
                         requesttgapi('SendMessage',{
