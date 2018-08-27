@@ -1,4 +1,4 @@
--- Adminer 4.3.1 MySQL dump
+-- Adminer 4.6.3 MySQL dump
 
 SET NAMES utf8;
 SET time_zone = '+00:00';
@@ -14,7 +14,7 @@ CREATE TABLE `Pixiv_bot_cache` (
   `query` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `offset` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `next_offset` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `text` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `text` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `results` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
   `next_url` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `time` bigint(20) NOT NULL,
@@ -44,4 +44,4 @@ CREATE TABLE `Pixiv_bot_p_list` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- 2017-09-24 06:16:26
+-- 2018-08-27 08:51:47
