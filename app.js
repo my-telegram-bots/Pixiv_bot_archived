@@ -251,6 +251,7 @@ function domessage(message) {
                 requesttgapi('SendPhoto',{
                     chat_id: chat_id,
                     photo: data.imgurl[1][i],
+                    reply_to_message_id: message_id,
                     caption: data.title + (data.imgurl[1].length > 1 ? (' ' + (i + 1) + '/' + data.imgurl[1].length) : ''),
                     reply_markup: JSON.stringify(genkeyboard(id,share,(data.imgurl[0].length > 1 ? true : false)))
                 });
@@ -288,6 +289,7 @@ function domessage(message) {
                                                     chat_id: chat_id,
                                                     up: 'animation',
                                                     filepath: './file/mp4_2/'+id+'.mp4',
+                                                    reply_to_message_id: message_id,
                                                     caption: data.title + (data.imgurl[1].length > 1 ? (' ' + (i + 1) + '/' + data.imgurl[1].length) : ''),
                                                     reply_markup: JSON.stringify(genkeyboard(id,share,(data.imgurl[0].length > 1 ? true : false)))
                                                 }).then(res => {                                    
@@ -302,6 +304,7 @@ function domessage(message) {
                                 });
                                 requesttgapi('SendMessage',{
                                     chat_id: chat_id,
+                                    reply_to_message_id: message_id,
                                     text: 'Internal error.\nPlease try again later.'
                                 });
                             }
@@ -311,6 +314,7 @@ function domessage(message) {
                     requesttgapi('sendAnimation',{
                         chat_id: chat_id,
                         animation: data.ugoira_file_id,
+                        reply_to_message_id: message_id,
                         caption: data.title + (data.imgurl[1].length > 1 ? (' ' + (i + 1) + '/' + data.imgurl[1].length) : ''),
                         reply_markup: JSON.stringify(genkeyboard(id,share,(data.imgurl[0].length > 1 ? true : false)))
                     });
@@ -329,7 +333,7 @@ function domessage(message) {
                     setTimeout(() => {
                         requesttgapi('SendMessage',{
                             chat_id: chat_id,
-                            text: 'let\'s get started!',
+                            text: 'Let\'s get started!',
                         })
                     }, 500);
                 })
