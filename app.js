@@ -93,7 +93,7 @@ function doinline(inline_query) {
                     type: 'photo',
                     photo_url: data.imgurl[1][i],
                     thumb_url: data.imgurl[0][i],
-                    caption: data.title + (data.imgurl[0].length > 1 ? '->' + (i+1) + '/' + data.imgurl.length : '') + '\n',
+                    caption: data.title + (data.imgurl[0].length > 1 ? '->' + (i+1) + '/' + data.imgurl[1].length : '') + '\n',
                     reply_markup: genkeyboard(id,share,(data.imgurl[0].length > 1 ? true : false))
                 });
                 if(tags){
@@ -433,7 +433,7 @@ function inlineimge(illusts,share,tags){
                 // only show illust[0] image
                 imgurl[0] = illust.meta_pages[0].image_urls.medium;
                 imgurl[1] = illust.meta_pages[0].image_urls.original;
-                p = '1/' + illust.meta_pages;
+                p = '1/' + illust.meta_pages.length;
             }
             inline.push({
                 id: illust.id + '_0',
