@@ -248,13 +248,13 @@ function domessage(message) {
     if(id){
         getillust(id,user_id).then(function(data){
             for (var i = 0; i < data.imgurl[1].length; i++) {
-                requesttgapi('SendPhoto',{
-                    chat_id: chat_id,
-                    photo: data.imgurl[1][i],
-                    reply_to_message_id: message_id,
-                    caption: data.title + (data.imgurl[1].length > 1 ? (' ' + (i + 1) + '/' + data.imgurl[1].length) : ''),
-                    reply_markup: JSON.stringify(genkeyboard(id,share,(data.imgurl[0].length > 1 ? true : false)))
-                });
+                    requesttgapi('SendPhoto',{
+                        chat_id: chat_id,
+                        photo: data.imgurl[1][i],
+                        reply_to_message_id: message_id,
+                        caption: data.title + (data.imgurl[1].length > 1 ? (' ' + (i + 1) + '/' + data.imgurl[1].length) : ''),
+                        reply_markup: JSON.stringify(genkeyboard(id,share,(data.imgurl[0].length > 1 ? true : false)))
+                    });
             }
             if(data.isugoira === 1){
                 if(data.ugoira_file_id === null){
@@ -262,7 +262,7 @@ function domessage(message) {
                         if(fs.existsSync('./file/mp4_1/' + id + '.mp4'))
                             fs.unlinkSync('./file/mp4_1/' + id + '.mp4');
                         if(fs.existsSync('./file/mp4_2/' + id + '.mp4'))
-                        fs.unlinkSync('./file/mp4_2/' + id + '.mp4');
+                            fs.unlinkSync('./file/mp4_2/' + id + '.mp4');
                         let frame = '# timecode format v2\n0\n';
                         let tempframe = 0;
                         (pixdata.ugoira_metadata.frames).forEach(function(element) {
@@ -338,6 +338,17 @@ function domessage(message) {
                     }, 500);
                 })
                 break;
+            case '/proxyedit':
+                if(chat_id == config.bot.masterid){
+                    requesttgapi('SendMessage',{
+                        chat_id: chat_id,
+                        reply_to_message_id: message_id,
+                        text: 'Pixiv url edited'
+                    })
+                    config.proxyurl = otext[1];
+                    fs.writeFileSync('config.json',JSON.stringify(config));
+                }
+                break;
             default:
                 break;
         }
@@ -358,7 +369,7 @@ function requesttgapi(type,value) {
                 else if(!JSON.parse(body).ok)
                     requesttgapi('SendMessage',{
                         chat_id: config.bot.masterid,
-                        text: 'Request tg api error\n' + body
+                        text: 'Request tg api error\nreqeust:' + type +'\n' + JSON.stringify(value) + '\n' + 'result' + body
                     });
                 else{
                     body = JSON.parse(body);
@@ -380,6 +391,10 @@ function getillust(id,user_id){
             if(results.length > 0){
                 imgurl[0] = JSON.parse(results[0].thumb_url);
                 imgurl[1] = JSON.parse(results[0].original_url);
+                for (let i = 0; i < imgurl[0].length; i++) {
+                    imgurl[0][i] = imgurl[0][i].replace('i.pximg.net',config.proxyurl)
+                    imgurl[1][i] = imgurl[0][i].replace('i.pximg.net',config.proxyurl)
+                }
                 data.title = results[0].title;
                 data.tags = JSON.parse(results[0].tags);
                 data.imgurl = imgurl;
@@ -407,6 +422,10 @@ function getillust(id,user_id){
                         if(error)
                         console.error(error);
                     });
+                    for (let i = 0; i < imgurl[0].length; i++) {
+                        imgurl[0][i] = imgurl[0][i].replace('i.pximg.net',config.proxyurl)
+                        imgurl[1][i] = imgurl[0][i].replace('i.pximg.net',config.proxyurl)
+                    }
                     data.title = illust.title;
                     data.tags = illust.tags;
                     data.imgurl = imgurl;
@@ -443,7 +462,7 @@ function inlineimge(illusts,share,tags){
                 caption: illust.title + '->' + (p ? p:''),
                 photo_width: illust.width,
                 photo_height: illust.height,
-                reply_markup: genkeyboard(illust.id,share,p)
+                reply_markup: JSON.stringify(genkeyboard(illust.id,share,p))
             });
             if(tags){
                 let t = '';
