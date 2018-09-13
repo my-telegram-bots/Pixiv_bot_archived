@@ -393,7 +393,7 @@ function getillust(id,user_id){
                 imgurl[1] = JSON.parse(results[0].original_url);
                 for (let i = 0; i < imgurl[0].length; i++) {
                     imgurl[0][i] = imgurl[0][i].replace('i.pximg.net',config.proxyurl)
-                    imgurl[1][i] = imgurl[0][i].replace('i.pximg.net',config.proxyurl)
+                    imgurl[1][i] = imgurl[1][i].replace('i.pximg.net',config.proxyurl)
                 }
                 data.title = results[0].title;
                 data.tags = JSON.parse(results[0].tags);
