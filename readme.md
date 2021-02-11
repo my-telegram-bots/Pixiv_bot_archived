@@ -1,4 +1,7 @@
-# pixiv bot
+# new version: https://github.com/my-telegram-bots/Pixiv_bot
+# pixiv bot (archived version)
+
+
 ## Demo
 ### [Pixiv_bot](https://t.me/pixiv_bot)  
 ## description
